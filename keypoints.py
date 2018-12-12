@@ -13,8 +13,8 @@ def get_candidate_keypoints(D, w=16):
 	''' End '''
 	
 	# have to start at w//2 so that when getting the local w x w descriptor, we don't fall off
-	for i in range(w//2, D.shape[0]-w//2):
-		for j in range(w//2, D.shape[1]-w//2):
+	for i in range(w//2+1, D.shape[0]-w//2-1):
+		for j in range(w//2+1, D.shape[1]-w//2-1):
 			for k in range(1, D.shape[2]-1): 
 				patch = D[i-1:i+2, j-1:j+2, k-1:k+2]
 				if np.argmax(patch) == 13 or np.argmin(patch) == 13:

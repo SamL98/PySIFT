@@ -1,33 +1,42 @@
 from skimage.io import imread
 from sift import SIFT
 
+import pickle
+
 if __name__ == '__main__':
-	im = imread('/Users/samlerner/Documents/Misc/IMG_5636.jpeg')
+	num_img = 3
 
-	sift_detector = SIFT(im)
-	feats = sift_detector.get_features()
+	#feats = []
+	kp_pyrs = []
+	ims = []
 
-	exit()
-	import matplotlib.pyplot as plt
-	from matplotlib.patches import Rectangle
+	for i in range(1, num_img+1):
+		print('Performing SIFT on image %d' % i)
 
-	for j in range(len(kps)):
-		pts = kps[j]
+		im = imread('images/IMG_039%d.JPG' % i)
+		ims.append(im)
 
-		_, ax = plt.subplots(1)
-		ax.imshow(im, 'gray')
-		ax.scatter(pts[:,0], pts[:,1], s=2.5, c='b')
+		sift_detector = SIFT(im)
+		_ = sift_detector.get_features()
+		kp_pyrs.append(sift_detector.kp_pyr)
 
-		for pt in pts:
-			w, angle = pt[2]*1.5, pt[3]*10
-			ax.add_patch(Rectangle(
-				(pt[0], pt[1]),
-				2*w+1, 2*w+1,
-				angle,
-				facecolor=None,
-				edgecolor='r'))
+		pickle.dump(sift_detector.kp_pyr, open('results/kp_pyr%d.pkl' % i, 'wb'))
+		pickle.dump(sift_detector.feats, open('results/feat_pyr%d.pkl' % i, 'wb'))
 
-		ax.set_title('octave: %d' % (j))
-		plt.show()
+	_, ax = plt.subplots(1, 3)
+	ax[0].imshow(ims[0])
 
-		im = im[::2, ::2]
+	kps = kp_pyrs[0][0]
+	ax[0].scatter(kps[:,0], kps[:,1], c='b', s=2.5)
+
+	ax[1].imshow(ims[1])
+
+	kps = kp_pyrs[1][0]
+	ax[1].scatter(kps[:,0], kps[:,1], c='b', s=2.5)
+
+	ax[2].imshow(ims[2])
+
+	kps = kp_pyrs[2][0]
+	ax[2].scatter(kps[:,0], kps[:,1], c='b', s=2.5)
+
+	plt.show()

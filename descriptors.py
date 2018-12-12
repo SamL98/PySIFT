@@ -25,11 +25,11 @@ def get_patch_grads(p):
 
     return dx, dy
 
-def get_histogram_for_subregion(m, theta, num_bin):
+def get_histogram_for_subregion(m, theta, num_bin, reference_angle):
     hist = np.zeros(num_bin, dtype=np.float32)
 
     for mag, angle in zip(m, theta):
-        binno = quantize_orientation(angle, num_bin)
+        binno = quantize_orientation(angle-reference_angle, num_bin)
         hist[binno] += mag
 
     hist /= LA.norm(hist)
@@ -65,7 +65,7 @@ def get_local_descriptors(kps, octave, w=16, num_subregion=4, num_bin=8):
                 t, l = i*subregion_w, j*subregion_w
                 b, r = min(L.shape[0], (i+1)*subregion_w), min(L.shape[1], (j+1)*subregion_w)
 
-                hist = get_histogram_for_subregion(m[t:b, l:r].ravel(), theta[t:b, l:r].ravel(), num_bin)
+                hist = get_histogram_for_subregion(m[t:b, l:r].ravel(), theta[t:b, l:r].ravel(), num_bin, kp[3])
                 featvec[i*subregion_w*num_bin + j*num_bin:i*subregion_w*num_bin + (j+1)*num_bin] = hist.flatten()
 
         descs.append(featvec)

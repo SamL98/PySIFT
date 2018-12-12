@@ -18,6 +18,7 @@ def quantize_orientation(theta, num_bins):
 
 def assign_orientation(kps, octave, num_bins=36):
     new_kps = []
+    bin_width = 360//num_bins
 
     for kp in kps:
         cx, cy, s = int(kp[0]), int(kp[1]), int(kp[2])
@@ -51,7 +52,7 @@ def assign_orientation(kps, octave, num_bins=36):
             if binno == max_bin: continue
 
             if .8 * max_val <= val:
-                new_kps.append([kp[0], kp[1], kp[2], binno])
+                new_kps.append([kp[0], kp[1], kp[2], binno*bin_width])
 
     # the SIFT paper specified fitting a parabola to the three maximal directions, but we forgo that for now
     return np.array(new_kps)
