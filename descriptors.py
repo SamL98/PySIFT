@@ -1,4 +1,5 @@
 import numpy as np
+import numpy.linalg as LA
 
 from gaussian_filter import gaussian_filter
 from orientation import quantize_orientation, cart_to_polar_grad
@@ -30,6 +31,10 @@ def get_histogram_for_subregion(m, theta, num_bin):
     for mag, angle in zip(m, theta):
         binno = quantize_orientation(angle, num_bin)
         hist[binno] += mag
+
+    hist /= LA.norm(hist)
+    hist[hist>0.2] = 0.2
+    hist /= LA.norm(hist)
 
     # in the SIFT paper, they perform trilinear interpolation on this histogram, but again I am forgoing that right now
     return hist
