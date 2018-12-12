@@ -5,8 +5,9 @@ if __name__ == '__main__':
 	im = imread('/Users/samlerner/Documents/Misc/IMG_5636.jpeg')
 
 	sift_detector = SIFT(im)
-	kps = sift_detector.get_features()
+	feats = sift_detector.get_features()
 
+	exit()
 	import matplotlib.pyplot as plt
 	from matplotlib.patches import Rectangle
 

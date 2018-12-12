@@ -2,13 +2,15 @@ import numpy as np
 
 from gaussian_filter import gaussian_filter
 
-def get_grad(L, x, y):
-    dy = L[y+1,x] - L[y-1,x]
-    dx = L[y,x+1] - L[y,x-1]
-
+def cart_to_polar_grad(dx, dy):
     m = np.sqrt(dx**2 + dy**2)
     theta = (np.arctan2(dy, dx)+np.pi) * 180/np.pi
     return m, theta
+
+def get_grad(L, x, y):
+    dy = L[y+1,x] - L[y-1,x]
+    dx = L[y,x+1] - L[y,x-1]
+    return cart_to_polar_grad(dx, dy)
 
 def quantize_orientation(theta, num_bins):
     bin_width = 360//num_bins
