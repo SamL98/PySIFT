@@ -8,8 +8,8 @@ def cart_to_polar_grad(dx, dy):
     return m, theta
 
 def get_grad(L, x, y):
-    dy = L[y+1,x] - L[y-1,x]
-    dx = L[y,x+1] - L[y,x-1]
+    dy = L[min(L.shape[0]-1, y+1),x] - L[max(0, y-1),x]
+    dx = L[y,min(L.shape[1]-1, x+1)] - L[y,max(0, x-1)]
     return cart_to_polar_grad(dx, dy)
 
 def quantize_orientation(theta, num_bins):

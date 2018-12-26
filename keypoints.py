@@ -62,6 +62,8 @@ def find_keypoints_for_DoG_octave(D, R_th, t_c, w):
 		if R > R_th: continue
 
 		kp = np.array([x, y, s]) + offset
+		if kp[1] >= D.shape[0] or kp[0] >= D.shape[1]: continue # throw out boundary points because I don't want to deal with them
+
 		keypoints.append(kp)
 
 	#print('%d keypoints found' % len(keypoints))

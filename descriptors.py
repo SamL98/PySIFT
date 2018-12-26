@@ -32,9 +32,9 @@ def get_histogram_for_subregion(m, theta, num_bin, reference_angle):
         binno = quantize_orientation(angle-reference_angle, num_bin)
         hist[binno] += mag
 
-    hist /= LA.norm(hist)
+    hist /= max(1e-6, LA.norm(hist))
     hist[hist>0.2] = 0.2
-    hist /= LA.norm(hist)
+    hist /= max(1e-6, LA.norm(hist))
 
     # in the SIFT paper, they perform trilinear interpolation on this histogram, but again I am forgoing that right now
     return hist
@@ -53,6 +53,28 @@ def get_local_descriptors(kps, octave, w=16, num_subregion=4, num_bin=8):
         patch = L[t:b, l:r]
 
         dx, dy = get_patch_grads(patch)
+
+        if dx.shape[0] < w+1:
+            if t == 0:
+                kernel = kernel[kernel.shape[0]-dx.shape[0]:]
+            else:
+                kernel = kernel[:dx.shape[0]]
+        if dx.shape[1] < w+1:
+            if l == 0:
+                kernel = kernel[kernel.shape[1]-dx.shape[1]:]
+            else:
+                kernel = kernel[:dx.shape[1]]
+
+        if dy.shape[0] < w+1:
+            if t == 0:
+                kernel = kernel[kernel.shape[0]-dy.shape[0]:]
+            else:
+                kernel = kernel[:dy.shape[0]]
+        if dy.shape[1] < w+1:
+            if l == 0:
+                kernel = kernel[kernel.shape[1]-dy.shape[1]:]
+            else:
+                kernel = kernel[:dy.shape[1]]
 
         m, theta = cart_to_polar_grad(dx, dy)
         dx, dy = dx*kernel, dy*kernel
