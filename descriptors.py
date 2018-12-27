@@ -30,19 +30,19 @@ def get_histogram_for_subregion(m, theta, num_bin, reference_angle, bin_width, s
     c = subregion_w/2 - .5
 
     for i, (mag, angle) in enumerate(zip(m, theta)):
-        angle -= reference_angle
-        vote = mag
+        angle = (angle-reference_angle) % 360
         binno = quantize_orientation(angle, num_bin)
+        vote = mag
 
         # binno*bin_width is the start angle of the histogram bin
         # binno*bin_width+bin_width/2 is the center of the histogram bin
         # angle - " is the distance from the angle to the center of the bin 
-        hist_interp_weight = 1 - abs(angle - (binno*bin_width + bin_width/2))
-        vote *= hist_interp_weight
+        hist_interp_weight = 1 - abs(angle - (binno*bin_width + bin_width/2))/(bin_width/2)
+        vote *= max(hist_interp_weight, 1e-6)
 
         gy, gx = np.unravel_index(i, (subregion_w, subregion_w))
-        x_interp_weight = 1 - abs(gx - c)/c
-        y_interp_weight = 1 - abs(gy - c)/c
+        x_interp_weight = max(1 - abs(gx - c)/c, 1e-6)
+        y_interp_weight = max(1 - abs(gy - c)/c, 1e-6)
         vote *= x_interp_weight * y_interp_weight
 
         hist[binno] += vote

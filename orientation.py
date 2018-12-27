@@ -18,9 +18,13 @@ def quantize_orientation(theta, num_bins):
     return int(np.floor(theta)//bin_width)
 
 def fit_parabola(hist, binno, bin_width):
-    centerval = (binno*bin_width)/2.
-    rightval = (((binno+1)%len(hist))*bin_width)/2.
-    leftval = (((binno-1)%len(hist))*bin_width)/2.
+    centerval = binno*bin_width + bin_width/2.
+
+    if binno == len(hist)-1: rightval = 360 + bin_width/2.
+    else: rightval = (binno+1)*bin_width + bin_width/2.
+
+    if binno == 0: leftval = -bin_width/2.
+    else: leftval = (binno-1)*bin_width + bin_width/2.
     
     A = np.array([
         [centerval**2, centerval, 1],
@@ -31,7 +35,8 @@ def fit_parabola(hist, binno, bin_width):
         hist[(binno+1)%len(hist)], 
         hist[(binno-1)%len(hist)]])
 
-    x = LA.lstsq(A, b)
+    x = LA.lstsq(A, b, rcond=None)[0]
+    if x[0] == 0: x[0] = 1e-6
     return -x[1]/(2*x[0])
 
 def assign_orientation(kps, octave, num_bins=36):
@@ -70,6 +75,6 @@ def assign_orientation(kps, octave, num_bins=36):
             if binno == max_bin: continue
 
             if .8 * max_val <= val:
-                new_kps.append([kp[0], kp[1], kp[2], fit_parabola(hist, max_bin, bin_width)])
+                new_kps.append([kp[0], kp[1], kp[2], fit_parabola(hist, binno, bin_width)])
 
     return np.array(new_kps)
