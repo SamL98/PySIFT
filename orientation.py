@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import linalg as LA
 
 from gaussian_filter import gaussian_filter
 
@@ -15,6 +16,23 @@ def get_grad(L, x, y):
 def quantize_orientation(theta, num_bins):
     bin_width = 360//num_bins
     return int(np.floor(theta)//bin_width)
+
+def fit_parabola(hist, binno, bin_width):
+    centerval = (binno*bin_width)/2.
+    rightval = (((binno+1)%len(hist))*bin_width)/2.
+    leftval = (((binno-1)%len(hist))*bin_width)/2.
+    
+    A = np.array([
+        [centerval**2, centerval, 1],
+        [rightval**2, rightval, 1],
+        [leftval**2, leftval, 1]])
+    b = np.array([
+        hist[binno],
+        hist[(binno+1)%len(hist)], 
+        hist[(binno-1)%len(hist)]])
+
+    x = LA.lstsq(A, b)
+    return -x[1]/(2*x[0])
 
 def assign_orientation(kps, octave, num_bins=36):
     new_kps = []
@@ -45,14 +63,13 @@ def assign_orientation(kps, octave, num_bins=36):
                 hist[bin] += weight
 
         max_bin = np.argmax(hist)
-        new_kps.append([kp[0], kp[1], kp[2], max_bin])
+        new_kps.append([kp[0], kp[1], kp[2], fit_parabola(hist, max_bin, bin_width)])
 
         max_val = np.max(hist)
         for binno, val in enumerate(hist):
             if binno == max_bin: continue
 
             if .8 * max_val <= val:
-                new_kps.append([kp[0], kp[1], kp[2], binno*bin_width])
+                new_kps.append([kp[0], kp[1], kp[2], fit_parabola(hist, max_bin, bin_width)])
 
-    # the SIFT paper specified fitting a parabola to the three maximal directions, but we forgo that for now
     return np.array(new_kps)
