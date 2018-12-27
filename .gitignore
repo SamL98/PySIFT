@@ -1,3 +1,7 @@
 /__pycache__/*
 /images/*
 /results/*
+/panorama/*
+/panorama_feats/*
+/stitch/*
+/stitch_feats/*
