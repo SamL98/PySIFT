@@ -6,6 +6,9 @@ from skimage.transform import warp
 import matplotlib.pyplot as plt
 
 import pickle
+from os.path import isfile
+
+from sift import SIFT
 
 def compute_homography(pts1, pts2):
 	pts1 = np.concatenate((pts1, np.ones((len(pts1), 1))), axis=1)
@@ -74,38 +77,57 @@ def get_transform(im1, im2, kps1, kps2, feats1, feats2, ratio=0.8, ret_idxs=Fals
 		return find_good_homography(kps1, kps2), idxs1, idxs2
 	return find_good_homography(kps1, kps2)
 
+def extract_or_load_features(im, kp_fname, feat_fname):
+    if isfile(kp_fname) and isfile(feat_fname):
+        #return pickle.load(open(kp_fname, 'rb'))[0], pickle.load(open(feat_fname, 'rb'))[0]
+        kps, feats = pickle.load(open(kp_fname, 'rb')), pickle.load(open(feat_fname, 'rb'))
+        kps = np.concatenate(kps, axis=0)
+        feats = np.concatenate(feats, axis=0)
+        return kps, feats
+
+    detector = SIFT(im)
+    _ = detector.get_features()
+    pickle.dump(detector.kp_pyr, open(kp_fname, 'wb'))
+    pickle.dump(detector.feats, open(feat_fname, 'wb'))
+    return np.concatenate(detector.kp_pyr, axis=0), np.concatenate(detector.feats, axis=0)
+
 if __name__ == '__main__':
 	ims = []
 	kp_pyrs = []
 	feat_pyrs = []
 
-	for i in range(3):
-		ims.append(imread('images/IMG_039%d.JPG' % (i+1)))
-		kp_pyrs.append(pickle.load(open('results/kp_pyr%d.pkl' % (i+1), 'rb'))[0])
-		feat_pyrs.append(pickle.load(open('results/feat_pyr%d.pkl' % (i+1), 'rb'))[0])
+	i = 1
+	j = i+1
+	im_dir = 'images/'
+	im_fmt = 'IMG_039%d.JPG'
+	feat_dir= 'results'
 
-	for i in range(3):
-		for j in range(i+1, 3):
-			im1, im2 = ims[i], ims[j]
-			H, ix1, ix2 = get_transform(im1, im2, kp_pyrs[i], kp_pyrs[j], feat_pyrs[i], feat_pyrs[j], ret_idxs=True)
-			kps1 = kp_pyrs[i][ix1]
-			kps2 = kp_pyrs[j][ix2]
+	for ix in [i, j]:
+		ims.append(imread(im_dir+im_fmt % ix))
+		kps, feats = extract_or_load_features(ims[-1], feat_dir+'/kp_pyr%d.pkl' % ix, feat_dir+'/feat_pyr%d.pkl' % ix)
+		kp_pyrs.append(kps)
+		feat_pyrs.append(feats)
 
-			_, ax = plt.subplots(2, 2)
-			ax[0,0].imshow(im1)
-			ax[0,0].scatter(kps1[:,0], kps1[:,1], c='r', s=3)
-			ax[0,0].axis('off')
+	im1, im2 = ims[0], ims[1]
+	H, ix1, ix2 = get_transform(im1, im2, kp_pyrs[0], kp_pyrs[1], feat_pyrs[0], feat_pyrs[1], ret_idxs=True)
+	kps1 = kp_pyrs[0][ix1]
+	kps2 = kp_pyrs[1][ix2]
 
-			ax[1,0].imshow(im2) 
-			ax[1,0].scatter(kps2[:,0], kps2[:,1], c='r', s=3)
-			ax[1,0].axis('off')
+	_, ax = plt.subplots(2, 2)
+	ax[0,0].imshow(im1)
+	ax[0,0].scatter(kps1[:,0], kps1[:,1], c='r', s=3)
+	ax[0,0].axis('off')
 
-			ax[1,1].imshow(warp(im1, LA.inv(H)))
-			ax[1,1].scatter(kps2[:,0], kps2[:,1], c='r', s=3)
-			ax[1,1].axis('off')
+	ax[1,0].imshow(im2) 
+	ax[1,0].scatter(kps2[:,0], kps2[:,1], c='r', s=3)
+	ax[1,0].axis('off')
 
-			ax[0,1].imshow(warp(im2, H))
-			ax[0,1].scatter(kps1[:,0], kps1[:,1], c='r', s=3)
-			ax[0,1].axis('off')
+	ax[1,1].imshow(warp(im1, LA.inv(H)))
+	ax[1,1].scatter(kps2[:,0], kps2[:,1], c='r', s=3)
+	ax[1,1].axis('off')
 
-			plt.show()
+	ax[0,1].imshow(warp(im2, H))
+	ax[0,1].scatter(kps1[:,0], kps1[:,1], c='r', s=3)
+	ax[0,1].axis('off')
+
+	plt.show()
